@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理 Cloudflare Tunnel 公共主机名</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<style>
+    :root {
+        --primary-color: #f6821f;
+        --secondary-color: #2c7cb0;
+        --success-color: #4caf50;
+        --danger-color: #f44336;
+        --text-color: #333;
+        --light-bg: #f9f9f9;
+        --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        --transition-speed: 0.3s;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--light-bg);
+        color: var(--text-color);
+        line-height: 1.6;
+        padding: 0;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .container {
+        width: 90%;
+        max-width: 900px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        transform: translateY(0);
+        transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    }
+
+    .container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 25px 30px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%);
+        transform: rotate(30deg);
+        pointer-events: none;
+    }
+
+    .header h1 {
+        margin: 0;
+        font-size: 2.2rem;
+        font-weight: 600;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        animation: fadeIn 1s ease-out;
+    }
+
+    .content {
+        padding: 30px;
+    }
+
+    .section {
+        margin-bottom: 40px;
+        animation: slideUp 0.5s ease-out;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f0f0;
+        position: relative;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 60px;
+        height: 2px;
+        background-color: var(--primary-color);
+        transition: width var(--transition-speed);
+    }
+
+    .section:hover .section-title::after {
+        width: 120px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 500;
+    }
+
+    textarea, input[type="text"], input[type="password"] {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+        background-color: #f9f9f9;
+    }
+
+    textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(246, 130, 31, 0.2);
+        background-color: #fff;
+    }
+
+    button {
+        padding: 12px 20px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: background-color var(--transition-speed), transform var(--transition-speed);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    button:hover {
+        background-color: #e67012;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    button i {
+        margin-right: 8px;
+    }
+
+    .submit-btn {
+        width: 100%;
+    }
+
+    .result {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        font-weight: 500;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity var(--transition-speed), transform var(--transition-speed);
+    }
+
+    .result.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .success {
+        background-color: rgba(76, 175, 80, 0.1);
+        color: var(--success-color);
+        border-left: 4px solid var(--success-color);
+    }
+
+    .error {
+        background-color: rgba(244, 67, 54, 0.1);
+        color: var(--danger-color);
+        border-left: 4px solid var(--danger-color);
+    }
+
+    #hostnameList {
+        margin-top: 20px;
+    }
+
+    #hostnameList ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    #hostnameList li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        margin-bottom: 10px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    #hostnameList li:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .hostname-info {
+        flex-grow: 1;
+    }
+
+    .hostname {
+        font-weight: 600;
+        color: var(--secondary-color);
+    }
+
+    .service {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .delete-btn {
+        background-color: var(--danger-color);
+        padding: 8px 12px;
+        margin-left: 15px;
+    }
+
+    .delete-btn:hover {
+        background-color: #d32f2f;
+    }
+
+    .empty-list {
+        text-align: center;
+        padding: 30px;
+        color: #888;
+        font-style: italic;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top-color: var(--primary-color);
+        animation: spin 1s linear infinite;
+    }
+
+    /* 验证模态框样式 */
+    .auth-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .auth-card {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+        animation: scaleIn 0.4s ease-out;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .auth-header h2 {
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+
+    .auth-header p {
+        color: #666;
+    }
+
+    .auth-form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .auth-message {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 6px;
+        text-align: center;
+    }
+
+    .logout-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background-color: transparent;
+        color: white;
+        box-shadow: none;
+        padding: 5px 10px;
+        font-size: 0.9rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .logout-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: none;
+        box-shadow: none;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes scaleIn {
+        from { 
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to { 
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            width: 95%;
+            margin: 20px auto;
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        #hostnameList li {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .delete-btn {
+            margin-left: 0;
+            margin-top: 10px;
+            align-self: flex-end;
+        }
+    }
+</style>
+
+<body>
+<!-- 身份验证模态框 -->
+<div id="authOverlay" class="auth-overlay">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2>身份验证</h2>
+            <p>请输入密码以继续使用管理页面</p>
+        </div>
+        <form id="authForm" class="auth-form">
+            <div class="form-group">
+                <label for="authPassword">密码</label>
+                <input type="password" id="authPassword" placeholder="请输入访问密码" required>
+            </div>
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-lock"></i> 验证身份
+            </button>
+            <div id="authMessage" class="auth-message"></div>
+        </form>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>Cloudflare Tunnel 公共主机名管理</h1>
+        <button id="logoutBtn" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> 退出登录
+        </button>
+    </div>
+    
+    <div class="content">
+        <!-- 添加主机名表单 -->
+        <div class="section">
+            <h2 class="section-title">添加主机名</h2>
+            <form id="hostnameForm">
+                <div class="form-group">
+                    <label for="subdomains">子域列表（每行一个）:</label>
+                    <textarea id="subdomains" name="subdomains" rows="4" placeholder="sub1.xlike.example.com&#10;sub2.xlike.example.com"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="serviceUrl">服务 URL:</label>
+                    <input type="text" id="serviceUrl" name="serviceUrl" placeholder="http://localhost:8080">
+                </div>
+                <button type="submit" class="submit-btn"><i class="fas fa-plus-circle"></i> 添加主机名</button>
+            </form>
+            <div id="addResult" class="result"></div>
+        </div>
+
+        <!-- 主机名列表 -->
+        <div class="section">
+            <h2 class="section-title">当前主机名列表</h2>
+            <div id="hostnameList">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 身份验证相关逻辑
+    const authOverlay = document.getElementById('authOverlay');
+    const authForm = document.getElementById('authForm');
+    const authMessage = document.getElementById('authMessage');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const AUTH_KEY = 'cloudflare_tunnel_auth';
+    
+    // 检查用户是否已经认证
+    function checkAuthentication() {
+        const auth = localStorage.getItem(AUTH_KEY);
+        if (!auth) {
+            showAuthOverlay();
+        } else {
+            hideAuthOverlay();
+            loadHostnameList(); // 已认证，加载列表
+        }
+    }
+    
+    // 显示认证弹窗
+    function showAuthOverlay() {
+        authOverlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // 禁止滚动
+    }
+    
+    // 隐藏认证弹窗
+    function hideAuthOverlay() {
+        authOverlay.style.display = 'none';
+        document.body.style.overflow = 'auto'; // 恢复滚动
+    }
+    
+    // 提交认证表单
+    authForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const password = document.getElementById('authPassword').value.trim();
+        if (!password) {
+            showAuthMessage('请输入密码', false);
+            return;
+        }
+        
+        try {
+            // 使用专门的 auth 接口验证密码
+            const response = await fetch('/api/cloudflare/auth', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({auth: password})
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // 认证成功，保存到本地
+                localStorage.setItem(AUTH_KEY, password);
+                hideAuthOverlay();
+                loadHostnameList();
+                showAuthMessage('', false); // 清除消息
+            } else {
+                showAuthMessage('密码错误，请重试', false);
+            }
+        } catch (error) {
+            showAuthMessage('验证时出错: ' + error.message, false);
+        }
+    });
+    
+    // 显示认证消息
+    function showAuthMessage(message, isSuccess) {
+        authMessage.textContent = message;
+        authMessage.className = 'auth-message ' + (isSuccess ? 'success' : 'error');
+    }
+    
+    // 退出登录
+    logoutBtn.addEventListener('click', function() {
+        localStorage.removeItem(AUTH_KEY);
+        showAuthOverlay();
+    });
+    
+    // 获取认证令牌
+    function getAuthToken() {
+        return localStorage.getItem(AUTH_KEY) || '';
+    }
+    
+    // 自动检查认证
+    document.addEventListener('DOMContentLoaded', checkAuthentication);
+
+    // 添加主机名
+    document.getElementById('hostnameForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const subdomains = document.getElementById('subdomains').value.trim().split('\n').filter(line => line.trim() !== '');
+        const serviceUrl = document.getElementById('serviceUrl').value.trim();
+        const addResultDiv = document.getElementById('addResult');
+
+        if (subdomains.length === 0 || !serviceUrl) {
+            showResult(addResultDiv, '请填写子域列表和服务 URL', false);
+            return;
+        }
+
+        const data = {
+            subdomains: subdomains,
+            serviceUrl: serviceUrl,
+            auth: getAuthToken() // 添加认证令牌
+        };
+
+        try {
+            // 显示加载状态
+            showResult(addResultDiv, '<div class="loading-spinner"></div> 正在提交...', true, 'loading');
+            
+            const response = await fetch('/api/cloudflare/add-hostnames', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            
+            // 检查是否授权失败
+            if (!result.success && result.message === '无效的授权') {
+                localStorage.removeItem(AUTH_KEY); // 清除已存储的授权
+                showAuthOverlay(); // 显示授权弹窗
+                showAuthMessage('授权已过期，请重新登录', false);
+                return;
+            }
+            
+            showResult(addResultDiv, result.message, result.success);
+            
+            if (result.success) {
+                // 清空表单
+                document.getElementById('subdomains').value = '';
+                document.getElementById('serviceUrl').value = '';
+                loadHostnameList(); // 添加成功后刷新列表
+            }
+        } catch (error) {
+            showResult(addResultDiv, '请求失败: ' + error.message, false);
+        }
+    });
+
+    // 显示结果消息
+    function showResult(element, message, isSuccess, customClass = null) {
+        element.innerHTML = message;
+        element.className = customClass ? `result ${customClass} show` : `result ${isSuccess ? 'success' : 'error'} show`;
+        
+        // 5秒后自动隐藏消息
+        setTimeout(() => {
+            element.classList.remove('show');
+        }, 5000);
+    }
+
+    // 加载主机名列表
+    async function loadHostnameList() {
+        const hostnameListDiv = document.getElementById('hostnameList');
+        hostnameListDiv.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
+        
+        try {
+            // 使用 POST 请求发送授权信息
+            const auth = getAuthToken();
+            const response = await fetch('/api/cloudflare/list-hostnames', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({auth: auth})
+            });
+            
+            const result = await response.json();
+            
+            // 检查是否授权失败
+            if (!result.success && result.message === '无效的授权') {
+                localStorage.removeItem(AUTH_KEY); // 清除已存储的授权
+                showAuthOverlay(); // 显示授权弹窗
+                showAuthMessage('授权已过期，请重新登录', false);
+                return;
+            }
+
+            if (result.success) {
+                const hostnames = result.data;
+                
+                if (hostnames.length === 0) {
+                    hostnameListDiv.innerHTML = '<div class="empty-list">暂无主机名记录</div>';
+                    return;
+                }
+                
+                let html = '<ul>';
+                hostnames.forEach((hostname, index) => {
+                    // 添加延迟动画效果
+                    const delay = index * 0.1;
+                    html += `
+                    <li style="animation-delay: ${delay}s">
+                        <div class="hostname-info">
+                            <div class="hostname">${hostname.hostname}</div>
+                            <div class="service"><i class="fas fa-arrow-right"></i> ${hostname.service}</div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteHostname('${hostname.hostname}')">
+                            <i class="fas fa-trash-alt"></i> 删除
+                        </button>
+                    </li>
+                `;
+                });
+                html += '</ul>';
+                hostnameListDiv.innerHTML = html;
+            } else {
+                hostnameListDiv.innerHTML = '<div class="result error show">' + result.message + '</div>';
+            }
+        } catch (error) {
+            hostnameListDiv.innerHTML = '<div class="result error show">加载列表失败: ' + error.message + '</div>';
+        }
+    }
+
+    // 删除主机名
+    async function deleteHostname(hostname) {
+        if (!confirm(`确定要删除 ${hostname} 吗？`)) return;
+
+        const addResultDiv = document.getElementById('addResult');
+        try {
+            // 显示加载状态
+            showResult(addResultDiv, '<div class="loading-spinner"></div> 正在删除...', true, 'loading');
+            
+            const response = await fetch('/api/cloudflare/delete-hostname', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    hostname: hostname,
+                    auth: getAuthToken() // 添加认证令牌
+                })
+            });
+
+            const result = await response.json();
+            
+            // 检查是否授权失败
+            if (!result.success && result.message === '无效的授权') {
+                localStorage.removeItem(AUTH_KEY); // 清除已存储的授权
+                showAuthOverlay(); // 显示授权弹窗
+                showAuthMessage('授权已过期，请重新登录', false);
+                return;
+            }
+            
+            showResult(addResultDiv, result.message, result.success);
+            
+            if (result.success) {
+                loadHostnameList(); // 删除成功后刷新列表
+            }
+        } catch (error) {
+            showResult(addResultDiv, '请求失败: ' + error.message, false);
+        }
+    }
+
+    // 页面加载时不再自动初始化列表，而是在认证后初始化
+    // window.onload = loadHostnameList; - 已移除
+</script>
+</body>
+</html>

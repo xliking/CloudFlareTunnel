@@ -1,0 +1,8 @@
+server:
+  port: 9995
+cloudflare:
+  auth: 修改为自己的
+  account-id: 修改为自己的
+  tunnel-id: 修改为自己的
+  api-token: 修改为自己的
+  zone-id: 修改为自己的

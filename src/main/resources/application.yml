@@ -1,0 +1,8 @@
+server:
+  port: ${SERVER_PORT:9995}  # 默认端口 9995，可通过环境变量覆盖
+cloudflare:
+  auth: ${CLOUDFLARE_AUTH:}
+  account-id: ${CLOUDFLARE_ACCOUNT_ID:}
+  tunnel-id: ${CLOUDFLARE_TUNNEL_ID:}
+  api-token: ${CLOUDFLARE_API_TOKEN:}
+  zone-id: ${CLOUDFLARE_ZONE_ID:}
