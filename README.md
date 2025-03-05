@@ -7,6 +7,8 @@
 
 **Cloudflare Tunnel Manager** 是一个基于 Spring Boot 的 Web 应用程序，用于管理 Cloudflare Tunnel 的公共主机名。它通过 Cloudflare API 实现主机名的添加、查看和删除操作，并同步更新 DNS CNAME 记录，简化了 Tunnel 配置流程。
 
+**具体教程可以查看   https://linux.do/t/topic/457567**
+
 ### 功能特点
 - **批量添加主机名**：支持一次性添加多个子域及其服务地址。
 - **主机名列表**：展示当前 Tunnel 配置中的所有主机名。
